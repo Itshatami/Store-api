@@ -13,7 +13,7 @@ class BrandController extends Controller
      */
     public function index()
     {
-        $brands = Brand::all();
+        $brands = Brand::paginate(5);
         return $this->sResponse($brands, 'all brands', 200);
     }
 
@@ -44,24 +44,47 @@ class BrandController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Brand $brand)
     {
-        //
+        if (!$brand) {
+            return $this->eResponse('brand not found', 400);
+        }
+        return $this->sResponse($brand, 'show one', 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Brand $brand)
     {
-        //
+        if (!$brand) {
+            return $this->eResponse('brand with given id does not exist', 400);
+        }
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'display_name' => 'required|string|unique:brands,display_name'
+        ]);
+        if ($validator->fails()) {
+            return $this->eResponse($validator->errors(), 400);
+        }
+        $brand->update([
+            'name' => $request->name,
+            'display_name' => $request->display_name
+        ]);
+        return $this->sResponse($brand, 'updated', 200);
     }
+
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Brand $brand)
     {
-        //
+        if ($brand) {
+            $brand->delete();
+            return $this->sResponse($brand, 'successfully deleted', 200);
+        } else {
+            return $this->eResponse("Brand Doesn't exist", 404);
+        }
     }
 }
