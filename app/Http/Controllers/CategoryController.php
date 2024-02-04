@@ -66,7 +66,7 @@ class CategoryController extends Controller
             'parent_id' => 'required|integer',
             'name' => 'required|unique:categories,name'
         ]);
-        if (!$validator->fails()) {
+        if ($validator->fails()) {
             return $this->eResponse($validator->messages(), 400);
         }
         $category->update([
@@ -86,5 +86,39 @@ class CategoryController extends Controller
         }
         $category->delete();
         $this->sResponse($category, 'deleted', 200);
+    }
+
+    public function children(Category $category)
+    {
+        if (!$category) {
+            return $this->eResponse('could not find childrens', 400);
+        }
+        return response()->json([
+            'status' => true,
+            'message' => 'childrens',
+            'data' => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'parent_id' => $category->parent_id,
+                'children' => $category->children
+            ]
+        ]);
+    }
+
+    public function parent(Category $category)
+    {
+        if (!$category) {
+            return $this->eResponse('could not find', 400);
+        }
+        return response()->json([
+            'status' => true,
+            'message' => 'parent of a child',
+            'data' => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'parent_id' => $category->parent_id,
+                'parent' => $category->parent
+            ]
+        ]);
     }
 }
