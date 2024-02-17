@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::apiResource('brands', BrandController::class);
+Route::get('/brands/{brand}/products', [BrandController::class, 'products']);
 
 Route::apiResource('categories', CategoryController::class);
 Route::get('/categories/{category}/children', [CategoryController::class, 'children']);

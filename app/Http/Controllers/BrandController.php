@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\BrandResource;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -86,5 +87,14 @@ class BrandController extends Controller
         } else {
             return $this->eResponse("Brand Doesn't exist", 404);
         }
+    }
+
+    public function products(Brand $brand)
+    {
+        if (!$brand) {
+            return $this->eResponse('brand not found', 400);
+        }
+        // return 1;
+        return $this->sResponse(new BrandResource($brand->load('products')), 'done');
     }
 }
