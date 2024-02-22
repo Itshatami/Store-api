@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Validator;
 
 class PaymentController extends Controller
@@ -31,17 +32,26 @@ class PaymentController extends Controller
             $deliveryAmount += $product->delivery_amount;
         }
         $payingAmount = $totalAmount + $deliveryAmount;
-        dd($totalAmount, $deliveryAmount, $payingAmount);
-        
+
+        $amounts = [
+            'totalAmount' => $totalAmount,
+            'deliveryAmount' => $deliveryAmount,
+            'payingAmount' => $payingAmount
+        ];
+
         $api = env("PAY_IR_API_KEY");
-        $amount = 10000;
+        $amount = $payingAmount;
         $mobile = "شماره موبایل";
         $factorNumber = "شماره فاکتور";
         $description = "توضیحات";
         $redirect = env('PAY_IR_CALLBACK_URL');
         $result = $this->sendRequest($api, $amount, $redirect, $mobile, $factorNumber, $description);
         $result = json_decode($result);
+
         if ($result->status) {
+            OrderController::create($request, $amounts, $result->token);
+            // $order = new OrderController();
+            // $order->create($request, $amounts, $result->token);
             $go = "https://pay.ir/pg/$result->token";
             return $this->sResponse(['url' => $go]);
         } else {
