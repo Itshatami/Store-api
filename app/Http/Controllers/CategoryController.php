@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -120,5 +121,13 @@ class CategoryController extends Controller
                 'parent' => $category->parent
             ]
         ]);
+    }
+
+    public function products(Category $category)
+    {
+        if (!$category) {
+            return $this->eResponse('could not find', 400);
+        }
+        return $this->sResponse(new CategoryResource($category->load('products')));
     }
 }
