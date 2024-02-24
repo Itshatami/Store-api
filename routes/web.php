@@ -19,10 +19,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/payment/verify', function (Request $request) {
-    // dd($request->all());
-    $response = Http::post('http://127.0.0.1:8000/api/payment/verify', [
-        'token' => $request->token
-    ]);
-    dd($response);
-});
+// UnComment in Xampp
+// Route::get('/payment/verify', function (Request $request) {
+//     // dd($request->all());
+//     $response = Http::post('http://127.0.0.1:8000/api/payment/verify', [
+//         'token' => $request->token
+//     ]);
+//     dd($response);
+// });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Http\Controllers\OrderController;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\Validator;
 
 class PaymentController extends Controller
@@ -61,19 +62,31 @@ class PaymentController extends Controller
 
     public function verify(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'token' => "required",
+            'status' => "required"
+        ]);
+        if ($validator->fails()) {
+            return $this->eResponse($validator->messages(), 400);
+        }
+
         $api = env("PAY_IR_API_KEY");
         $token = $request->token;
         $result = json_decode($this->verifyRequest($api, $token));
-        return response()->json($result);
+        // return response()->json($result);
         if (isset($result->status)) {
             if ($result->status == 1) {
-                echo "<h1>تراکنش با موفقیت انجام شد</h1>";
+                if (Transaction::where('trans_id', $result->transId)->exists()) {
+                    return $this->eResponse('این تراکنش در سیستم ثبت شده است', 200);
+                }
+                OrderController::update($token, $result->transId);
+                return $this->sResponse('تراکنش با موفقیت انجام شد');
             } else {
-                echo "<h1>تراکنش با خطا مواجه شد</h1>";
+                return $this->eResponse('تراکنش با خطا انجام شد', 400);
             }
         } else {
-            if ($_GET['status'] == 0) {
-                echo "<h1>تراکنش با خطا مواجه شد</h1>";
+            if ($request->status == 0) {
+                return $this->eResponse('تراکنش با خطا انجام شد', 400);
             }
         }
     }

@@ -6,6 +6,8 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -16,6 +18,7 @@ class AuthController extends Controller
             'name' => "required",
             'email' => "required|email|unique:users,email",
             'password' => "required|min:5",
+            'c_password' => "required|same:password"
         ]);
         if ($validator->fails()) {
             return $this->eResponse($validator->messages(), 400);
@@ -31,7 +34,7 @@ class AuthController extends Controller
             ]);
             if ($user) {
                 DB::commit();
-                $token = $user->createToken('token')->accessToken;
+                $token = $user->createToken('myToken')->accessToken;
             } else {
                 throw new Exception("cant create user");
             }
@@ -40,5 +43,33 @@ class AuthController extends Controller
             DB::rollBack();
             return $this->eResponse($e->getMessage(), 400);
         }
+    }
+
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => "required|email|unique:users,email",
+            'password' => "required|min:5",
+        ]);
+        if ($validator->fails()) {
+            return $this->eResponse($validator->messages(), 400);
+        }
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return $this->eResponse('user not found', 422);
+        }
+        if (!Hash::check($user->password, $request->password)) {
+            return $this->eResponse('password does not match', 422);
+        };
+
+        $token = $user->createToken('myToken')->accessToken;
+        return $this->sResponse(['user' => $user, 'token' => $token]);
+    }
+
+    public function logout(Request $request)
+    {
+        $user = $request->user();
+        $user->tokens()->delete();
+        return $this->sResponse('', 'your logged out');
     }
 }
